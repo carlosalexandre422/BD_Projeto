@@ -40,12 +40,16 @@ class OperacoesCRUD:
                        (novo_cliente.nome, novo_cliente.telefone, novo_cliente.endereco, codigo))
         self.conn.commit()
 
-    def pesquisar_por_nome(self, nome):
+    def pesquisar_produto_por_nome(self, nome_produto):
         resultados = []
-        for row in self.c.execute('''SELECT * FROM estoque WHERE nome LIKE ?''', ('%' + nome + '%',)):
-            resultados.append(Produto(row[1], row[2], row[3]))
-        for row in self.c.execute('''SELECT * FROM clientes WHERE nome LIKE ?''', ('%' + nome + '%',)):
-            resultados.append(Cliente(row[1], row[2], row[3]))
+        for col in self.c.execute('''SELECT * FROM estoque WHERE nome LIKE ?''', ('%' + nome_produto + '%',)):
+            resultados.append((col[0], col[1], col[2], col[3]))
+        return resultados
+    
+    def pesquisar_cliente_por_nome(self, nome_cliente):
+        resultados = []
+        for col in self.c.execute('''SELECT * FROM clientes WHERE nome LIKE ?''', ('%' + nome_cliente + '%',)):
+            resultados.append((col[0], col[1], col[2], col[3]))
         return resultados
 
     def remover_estoque(self, codigo):
@@ -56,17 +60,15 @@ class OperacoesCRUD:
         self.c.execute('''DELETE FROM clientes WHERE codigo=?''', (codigo,))
         self.conn.commit()
 
-    def listar_todos_estoque(self):
-        resultados = []
-        for row in self.c.execute('''SELECT * FROM estoque'''):
-            resultados.append(Produto(row[1], row[2], row[3]))
-        return resultados
+    def mostrar_todos_itens_estoque(self):
+        self.c.execute("SELECT * FROM estoque")
+        estoque = self.c.fetchall()
+        return estoque
 
     def listar_todos_clientes(self):
-        resultados = []
-        for row in self.c.execute('''SELECT * FROM clientes'''):
-            resultados.append(Cliente(row[1], row[2], row[3]))
-        return resultados
+        self.c.execute("SELECT * FROM clientes")
+        clientes = self.c.fetchall()
+        return clientes
 
 class Produto:
     def __init__(self, nome, quantidade, preco):
@@ -85,37 +87,68 @@ class Application:
         self.master = master
         self.master.title("Sistema de Gerenciamento do Mercado")
 
+        # Operações CRUD
         self.operacoes_crud = OperacoesCRUD()
 
+        # Título
         self.label = tk.Label(master, text="Escolha uma operação:")
         self.label.pack()
-        self.screen = tk.Canvas(master,height=20, width=200)
-        self.screen.pack()
 
-        self.inserir_produto_button = tk.Button(master, text="Inserir Produto", command=self.janela_inserir_produto)
-        self.inserir_produto_button.pack()
+        # Frame para operações relacionadas a produtos
+        self.produtos_frame = tk.Frame(master)
+        self.produtos_frame.pack(side=tk.LEFT, padx=10)
 
-        self.inserir_cliente_button = tk.Button(master, text="Inserir Cliente", command=self.janela_inserir_cliente)
-        self.inserir_cliente_button.pack()
+        # Título para operações relacionadas a produtos
+        self.produtos_label = tk.Label(self.produtos_frame, text="Produtos:")
+        self.produtos_label.pack()
 
-        self.alterar_produto_button = tk.Button(master, text="Alterar Produto", command=self.janela_alterar_produto)
-        self.alterar_produto_button.pack()
+        # Botões para operações relacionadas a produtos
+        self.inserir_produto_button = tk.Button(self.produtos_frame, text="Inserir Produto", command=self.janela_inserir_produto)
+        self.inserir_produto_button.pack(pady=5)
 
-        self.alterar_cliente_button = tk.Button(master, text="Alterar Cliente", command=self.janela_alterar_cliente)
-        self.alterar_cliente_button.pack()
+        self.alterar_produto_button = tk.Button(self.produtos_frame, text="Alterar Produto", command=self.janela_alterar_produto)
+        self.alterar_produto_button.pack(pady=5)
 
-        self.remover_produto_button = tk.Button(master, text="Remover Produto", command=self.janela_remover_produto)
-        self.remover_produto_button.pack()
+        self.pesquisar_produto_button = tk.Button(self.produtos_frame, text="Pesquisar Produto", command=self.janela_pesquisar_produto)
+        self.pesquisar_produto_button.pack(pady=5)
 
-        self.remover_cliente_button = tk.Button(master, text="Remover Cliente", command=self.janela_remover_cliente)
-        self.remover_cliente_button.pack()
+        self.remover_produto_button = tk.Button(self.produtos_frame, text="Remover Produto", command=self.janela_remover_produto)
+        self.remover_produto_button.pack(pady=5)
 
-        self.pesquisar_button = tk.Button(master, text="Pesquisar", command=self.janela_pesquisar)
-        self.pesquisar_button.pack()
+        self.mostrar_estoque_button = tk.Button(self.produtos_frame, text="Mostrar Estoque", command=self.mostrar_estoque)
+        self.mostrar_estoque_button.pack(pady=5)
+
+        # Frame para operações relacionadas a clientes
+        self.clientes_frame = tk.Frame(master)
+        self.clientes_frame.pack(side=tk.RIGHT, padx=10)
+
+        # Título para operações relacionadas a clientes
+        self.clientes_label = tk.Label(self.clientes_frame, text="Clientes:")
+        self.clientes_label.pack()
+
+        # Botões para operações relacionadas a clientes
+        self.inserir_cliente_button = tk.Button(self.clientes_frame, text="Inserir Cliente", command=self.janela_inserir_cliente)
+        self.inserir_cliente_button.pack(pady=5)
+
+        self.alterar_cliente_button = tk.Button(self.clientes_frame, text="Alterar Cliente", command=self.janela_alterar_cliente)
+        self.alterar_cliente_button.pack(pady=5)
+
+        self.pesquisar_cliente_button = tk.Button(self.clientes_frame, text="Pesquisar Cliente", command=self.janela_pesquisar_cliente)
+        self.pesquisar_cliente_button.pack(pady=5)
+
+        self.remover_cliente_button = tk.Button(self.clientes_frame, text="Remover Cliente", command=self.janela_remover_cliente)
+        self.remover_cliente_button.pack(pady=5)
+
+        self.mostrar_clientes_button = tk.Button(self.clientes_frame, text="Mostrar Clientes", command=self.mostrar_clientes)
+        self.mostrar_clientes_button.pack(pady=5)
+
+        # Botão de relatório
+        self.relatorio_button = tk.Button(master, text="Relatório do Sistema", command=self.janela_relatorio)
+        self.relatorio_button.pack(pady=10)
 
     def janela_inserir_produto(self):
         inserir_produto_window = tk.Toplevel(self.master)
-        inserir_produto_window.title("Inserir Produto")
+        inserir_produto_window.title("Inserir produto")
 
         label_nome = tk.Label(inserir_produto_window, text="Nome:")
         label_nome.pack()
@@ -146,7 +179,7 @@ class Application:
 
     def janela_inserir_cliente(self):
         inserir_cliente_window = tk.Toplevel(self.master)
-        inserir_cliente_window.title("Inserir Cliente")
+        inserir_cliente_window.title("Inserir cliente")
 
         label_nome = tk.Label(inserir_cliente_window, text="Nome:")
         label_nome.pack()
@@ -177,24 +210,24 @@ class Application:
 
     def janela_alterar_produto(self):
         alterar_produto_window = tk.Toplevel(self.master)
-        alterar_produto_window.title("Alterar Produto")
+        alterar_produto_window.title("Alterar produto")
 
-        label_codigo = tk.Label(alterar_produto_window, text="Código do Produto:")
+        label_codigo = tk.Label(alterar_produto_window, text="Código do produto:")
         label_codigo.pack()
         entry_codigo = tk.Entry(alterar_produto_window)
         entry_codigo.pack()
 
-        label_nome = tk.Label(alterar_produto_window, text="Novo Nome:")
+        label_nome = tk.Label(alterar_produto_window, text="Novo nome:")
         label_nome.pack()
         entry_nome = tk.Entry(alterar_produto_window)
         entry_nome.pack()
 
-        label_quantidade = tk.Label(alterar_produto_window, text="Nova Quantidade:")
+        label_quantidade = tk.Label(alterar_produto_window, text="Nova quantidade:")
         label_quantidade.pack()
         entry_quantidade = tk.Entry(alterar_produto_window)
         entry_quantidade.pack()
 
-        label_preco = tk.Label(alterar_produto_window, text="Novo Preço:")
+        label_preco = tk.Label(alterar_produto_window, text="Novo preço:")
         label_preco.pack()
         entry_preco = tk.Entry(alterar_produto_window)
         entry_preco.pack()
@@ -214,25 +247,26 @@ class Application:
 
     def janela_alterar_cliente(self):
         alterar_cliente_window = tk.Toplevel(self.master)
-        alterar_cliente_window.title("Alterar Cliente")
+        alterar_cliente_window.title("Alterar cliente")
 
-        label_codigo = tk.Label(alterar_cliente_window, text="Código do Cliente:")
+        label_codigo = tk.Label(alterar_cliente_window, text="Código do cliente:")
         label_codigo.pack()
         entry_codigo = tk.Entry(alterar_cliente_window)
         entry_codigo.pack()
 
-        label_nome = tk.Label(alterar_cliente_window, text="Novo Nome:")
+        label_nome = tk.Label(alterar_cliente_window, text="Novo nome:")
         label_nome.pack()
         entry_nome = tk.Entry(alterar_cliente_window)
         entry_nome.pack()
 
-        label_telefone = tk.Label(alterar_cliente_window, text="Novo Telefone:")
+        label_telefone = tk.Label(alterar_cliente_window, text="Novo telefone:")
         label_telefone.pack()
         entry_telefone = tk.Entry(alterar_cliente_window)
         entry_telefone.pack()
 
-        label_endereco = tk.Label(alterar_cliente_window, text="Novo Endereço:")
+        label_endereco = tk.Label(alterar_cliente_window, text="Novo endereço:")
         label_endereco.pack()
+        
         entry_endereco = tk.Entry(alterar_cliente_window)
         entry_endereco.pack()
 
@@ -249,11 +283,61 @@ class Application:
         button_alterar = tk.Button(alterar_cliente_window, text="Alterar", command=alterar_cliente)
         button_alterar.pack()
 
+    def janela_pesquisar_produto(self):
+        pesquisar_produto_window = tk.Toplevel(self.master)
+        pesquisar_produto_window.title("Pesquisar produto")
+
+        label_pesquisar = tk.Label(pesquisar_produto_window, text="Digite o nome do produto:")
+        label_pesquisar.pack()
+
+        entry_pesquisar = tk.Entry(pesquisar_produto_window)
+        entry_pesquisar.pack()
+
+        button_pesquisar = tk.Button(pesquisar_produto_window, text="Pesquisar", command=lambda: self.pesquisar_produto(entry_pesquisar.get()))
+        button_pesquisar.pack()
+
+    def pesquisar_produto(self, nome_produto):
+        resultados_pesquisa = self.operacoes_crud.pesquisar_produto_por_nome(nome_produto)
+
+        if resultados_pesquisa:
+            resultado_str = "Resultados da pesquisa:\n"
+            for resultado in resultados_pesquisa:
+                codigo, nome, quantidade, preco = resultado
+                resultado_str += f"Código: {codigo}\nNome: {nome}\nQuantidade: {quantidade}\nPreço: {preco}\n"
+            messagebox.showinfo("Resultados", resultado_str)
+        else:
+            messagebox.showinfo("Resultados", "Nenhum produto encontrado com esse nome.")
+
+    def janela_pesquisar_cliente(self):
+        pesquisar_cliente_window = tk.Toplevel(self.master)
+        pesquisar_cliente_window.title("Pesquisar cliente")
+
+        label_pesquisar = tk.Label(pesquisar_cliente_window, text="Digite o nome do cliente:")
+        label_pesquisar.pack()
+
+        entry_pesquisar = tk.Entry(pesquisar_cliente_window)
+        entry_pesquisar.pack()
+
+        button_pesquisar = tk.Button(pesquisar_cliente_window, text="Pesquisar", command=lambda: self.pesquisar_cliente(entry_pesquisar.get()))
+        button_pesquisar.pack()
+
+    def pesquisar_cliente(self, nome_cliente):
+        resultados_pesquisa = self.operacoes_crud.pesquisar_cliente_por_nome(nome_cliente)
+
+        if resultados_pesquisa:
+            resultado_str = "Resultados da pesquisa:\n"
+            for resultado in resultados_pesquisa:
+                codigo, nome, telefone, endereco = resultado
+                resultado_str += f"Código: {codigo}\nNome: {nome}\nTelefone: {telefone}\nEndereço: {endereco}\n"
+            messagebox.showinfo("Resultados", resultado_str)
+        else:
+            messagebox.showinfo("Resultados", "Nenhum cliente encontrado com esse nome.")
+
     def janela_remover_produto(self):
         remover_produto_window = tk.Toplevel(self.master)
-        remover_produto_window.title("Remover Produto")
+        remover_produto_window.title("Remover produto")
 
-        label_codigo = tk.Label(remover_produto_window, text="Código do Produto:")
+        label_codigo = tk.Label(remover_produto_window, text="Código do produto:")
         label_codigo.pack()
         entry_codigo = tk.Entry(remover_produto_window)
         entry_codigo.pack()
@@ -267,11 +351,12 @@ class Application:
         button_remover = tk.Button(remover_produto_window, text="Remover", command=remover_produto)
         button_remover.pack()
 
+
     def janela_remover_cliente(self):
         remover_cliente_window = tk.Toplevel(self.master)
-        remover_cliente_window.title("Remover Cliente")
+        remover_cliente_window.title("Remover cliente")
 
-        label_codigo = tk.Label(remover_cliente_window, text="Código do Cliente:")
+        label_codigo = tk.Label(remover_cliente_window, text="Código do cliente:")
         label_codigo.pack()
         entry_codigo = tk.Entry(remover_cliente_window)
         entry_codigo.pack()
@@ -285,33 +370,32 @@ class Application:
         button_remover = tk.Button(remover_cliente_window, text="Remover", command=remover_cliente)
         button_remover.pack()
 
-    def janela_pesquisar(self):
-        pesquisar_window = tk.Toplevel(self.master)
-        pesquisar_window.title("Pesquisar")
+    def mostrar_estoque(self):
+        resultados = self.operacoes_crud.mostrar_todos_itens_estoque()
+        
+        if resultados:
+            resultado_str = "Código | Nome | Quantidade | Preço\n"
+            for resultado in resultados:
+                resultado_str += " | ".join(str(item) for item in resultado) + "\n"
+            messagebox.showinfo("Estoque", resultado_str)
+        else:
+            messagebox.showinfo("Estoque", "O estoque está vazio.")
+            
+    def mostrar_clientes(self):
+        resultados = self.operacoes_crud.listar_todos_clientes()
 
-        label_nome = tk.Label(pesquisar_window, text="Nome:")
-        label_nome.pack()
-        entry_nome = tk.Entry(pesquisar_window)
-        entry_nome.pack()
+        if resultados:
+            resultado_str = "Código | Nome | Telefone | Endereço\n"
+            for resultado in resultados:
+                resultado_str += " | ".join(str(item) for item in resultado) + "\n"
+            messagebox.showinfo("Clientes", resultado_str)
+        else:
+            messagebox.showinfo("Clientes", "Nenhum cliente encontrado.")
 
-        def pesquisar():
-            nome = entry_nome.get()
-            resultados = self.operacoes_crud.pesquisar_por_nome(nome)
-            if resultados:
-                resultado_str = ""
-                for resultado in resultados:
-                    if isinstance(resultado, Produto):
-                        resultado_str += f"Produto - Nome: {resultado.nome}, Quantidade: {resultado.quantidade}, Preço: {resultado.preco}\n"
-                    elif isinstance(resultado, Cliente):
-                        resultado_str += f"Cliente - Nome: {resultado.nome}, Telefone: {resultado.telefone}, Endereço: {resultado.endereco}\n"
-                messagebox.showinfo("Resultados", resultado_str)
-            else:
-                messagebox.showinfo("Resultados", "Nenhum resultado encontrado.")
-            pesquisar_window.destroy()
-
-        button_pesquisar = tk.Button(pesquisar_window, text="Pesquisar", command=pesquisar)
-        button_pesquisar.pack()
-
+    def janela_relatorio(self):
+        relatorio_window = tk.Toplevel(self.master)
+        relatorio_window.title("Relatório do sistema")
+            
 root = tk.Tk()
 app = Application(root)
 root.mainloop()
