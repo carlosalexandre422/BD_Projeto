@@ -86,23 +86,17 @@ class Application:
     def __init__(self, master):
         self.master = master
         self.master.title("Sistema de Gerenciamento do Mercado")
-
-        # Operações CRUD
         self.operacoes_crud = OperacoesCRUD()
-
-        # Título
         self.label = tk.Label(master, text="Escolha uma operação:")
         self.label.pack()
 
-        # Frame para operações relacionadas a produtos
+        #Produtos
         self.produtos_frame = tk.Frame(master)
         self.produtos_frame.pack(side=tk.LEFT, padx=10)
 
-        # Título para operações relacionadas a produtos
         self.produtos_label = tk.Label(self.produtos_frame, text="Produtos:")
         self.produtos_label.pack()
 
-        # Botões para operações relacionadas a produtos
         self.inserir_produto_button = tk.Button(self.produtos_frame, text="Inserir Produto", command=self.janela_inserir_produto)
         self.inserir_produto_button.pack(pady=5)
 
@@ -118,15 +112,13 @@ class Application:
         self.mostrar_estoque_button = tk.Button(self.produtos_frame, text="Mostrar Estoque", command=self.mostrar_estoque)
         self.mostrar_estoque_button.pack(pady=5)
 
-        # Frame para operações relacionadas a clientes
+        #Clientes
         self.clientes_frame = tk.Frame(master)
         self.clientes_frame.pack(side=tk.RIGHT, padx=10)
 
-        # Título para operações relacionadas a clientes
         self.clientes_label = tk.Label(self.clientes_frame, text="Clientes:")
         self.clientes_label.pack()
 
-        # Botões para operações relacionadas a clientes
         self.inserir_cliente_button = tk.Button(self.clientes_frame, text="Inserir Cliente", command=self.janela_inserir_cliente)
         self.inserir_cliente_button.pack(pady=5)
 
@@ -142,7 +134,7 @@ class Application:
         self.mostrar_clientes_button = tk.Button(self.clientes_frame, text="Mostrar Clientes", command=self.mostrar_clientes)
         self.mostrar_clientes_button.pack(pady=5)
 
-        # Botão de relatório
+        #Relatório
         self.relatorio_button = tk.Button(master, text="Relatório do Sistema", command=self.janela_relatorio)
         self.relatorio_button.pack(pady=10)
 
