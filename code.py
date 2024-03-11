@@ -69,6 +69,55 @@ class OperacoesCRUD:
         self.c.execute("SELECT * FROM clientes")
         clientes = self.c.fetchall()
         return clientes
+    
+
+    def quantidade_produtos_inseridos(self):
+        try:
+            quantidade = self.c.execute("SELECT COUNT(*) FROM estoque").fetchone()[0]
+            return quantidade
+        except sqlite3.OperationalError:
+            return 0
+
+    def quantidade_clientes_inseridos(self):
+        try:
+            quantidade = self.c.execute("SELECT COUNT(*) FROM clientes").fetchone()[0]
+            return quantidade
+        except sqlite3.OperationalError:
+            return 0
+
+    def soma_total_valores_produtos(self):
+        try:
+            self.c.execute("SELECT SUM(preco) FROM estoque")
+            total_valores = self.c.fetchone()[0] or 0  # P lidar c valores nulos
+            return total_valores
+        except sqlite3.OperationalError:
+            return 0
+
+    def soma_total_quantidades_produtos(self):
+        try:
+            self.c.execute("SELECT SUM(quantidade) FROM estoque")
+            total_quantidades = self.c.fetchone()[0] or 0  # P lidar c valores nulos
+            return total_quantidades
+        except sqlite3.OperationalError:
+            return 0
+
+    def relatorio_sistema(self):
+        
+        quantidade_produtos = self.quantidade_produtos_inseridos()
+
+        quantidade_clientes = self.quantidade_clientes_inseridos()
+
+        total_valores_produtos = self.soma_total_valores_produtos()
+        
+        total_quantidades_produtos = self.soma_total_quantidades_produtos()
+
+        # Criar o texto do relatório
+        relatorio_text = f"Quantidade de produtos inseridos: {quantidade_produtos}\n"
+        relatorio_text += f"Quantidade de clientes inseridos: {quantidade_clientes}\n"
+        relatorio_text += f"Preço total dos produtos: {total_valores_produtos}\n"
+        relatorio_text += f"Quantidade total dos produtos: {total_quantidades_produtos}\n"
+
+        return relatorio_text
 
 class Produto:
     def __init__(self, nome, quantidade, preco):
@@ -387,6 +436,12 @@ class Application:
     def janela_relatorio(self):
         relatorio_window = tk.Toplevel(self.master)
         relatorio_window.title("Relatório do sistema")
+
+        relatorio_text = self.operacoes_crud.relatorio_sistema()
+
+        label_relatorio = tk.Label(relatorio_window, text=relatorio_text)
+        label_relatorio.pack(padx=10, pady=10)
+
             
 root = tk.Tk()
 app = Application(root)
