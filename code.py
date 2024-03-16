@@ -33,12 +33,16 @@ class OperacoesCRUD:
     def alterar_estoque(self, codigo, novo_produto):
         self.c.execute('''UPDATE estoque SET nome=?, quantidade=?, preco=? WHERE codigo=?''',
                        (novo_produto.nome, novo_produto.quantidade, novo_produto.preco, codigo))
+        rows_affected = self.c.execute("SELECT changes()").fetchone()[0]
         self.conn.commit()
+        return rows_affected
 
     def alterar_cliente(self, codigo, novo_cliente):
         self.c.execute('''UPDATE clientes SET nome=?, telefone=?, endereco=? WHERE codigo=?''',
                        (novo_cliente.nome, novo_cliente.telefone, novo_cliente.endereco, codigo))
+        rows_affected = self.c.execute("SELECT changes()").fetchone()[0]
         self.conn.commit()
+        return rows_affected
 
     def pesquisar_produto_por_nome(self, nome_produto):
         resultados = []
@@ -54,11 +58,15 @@ class OperacoesCRUD:
 
     def remover_estoque(self, codigo):
         self.c.execute('''DELETE FROM estoque WHERE codigo=?''', (codigo,))
+        rows_deleted = self.c.execute("SELECT changes()").fetchone()[0]
         self.conn.commit()
+        return rows_deleted
 
     def remover_cliente(self, codigo):
         self.c.execute('''DELETE FROM clientes WHERE codigo=?''', (codigo,))
+        rows_deleted = self.c.execute("SELECT changes()").fetchone()[0]
         self.conn.commit()
+        return rows_deleted
 
     def mostrar_todos_itens_estoque(self):
         self.c.execute("SELECT * FROM estoque")
@@ -279,7 +287,10 @@ class Application:
             quantidade = int(entry_quantidade.get())
             preco = float(entry_preco.get())
             novo_produto = Produto(nome, quantidade, preco)
-            self.operacoes_crud.alterar_estoque(codigo, novo_produto)
+            rows_affected = self.operacoes_crud.alterar_estoque(codigo, novo_produto)
+            if rows_affected == 0:
+                messagebox.showinfo("Erro", "Produto não encontrado.")
+                return
             messagebox.showinfo("Sucesso", "Produto alterado com sucesso!")
             alterar_produto_window.destroy()
 
@@ -317,7 +328,10 @@ class Application:
             telefone = entry_telefone.get()
             endereco = entry_endereco.get()
             novo_cliente = Cliente(nome, telefone, endereco)
-            self.operacoes_crud.alterar_cliente(codigo, novo_cliente)
+            rows_affected = self.operacoes_crud.alterar_cliente(codigo, novo_cliente)
+            if rows_affected == 0:
+                messagebox.showinfo("Erro", "Cliente não encontrado.")
+                return
             messagebox.showinfo("Sucesso", "Cliente alterado com sucesso!")
             alterar_cliente_window.destroy()
 
@@ -385,8 +399,11 @@ class Application:
 
         def remover_produto():
             codigo = int(entry_codigo.get())
-            self.operacoes_crud.remover_estoque(codigo)
-            messagebox.showinfo("Sucesso", "Produto removido com sucesso!")
+            changes = self.operacoes_crud.remover_estoque(codigo)
+            if changes == 0:
+                messagebox.showinfo("Erro", "Produto não encontrado.")
+            else: 
+                messagebox.showinfo("Sucesso", "Produto removido com sucesso!")
             remover_produto_window.destroy()
 
         button_remover = tk.Button(remover_produto_window, text="Remover", command=remover_produto)
@@ -404,9 +421,11 @@ class Application:
 
         def remover_cliente():
             codigo = int(entry_codigo.get())
-            self.operacoes_crud.remover_cliente(codigo)
-            messagebox.showinfo("Sucesso", "Cliente removido com sucesso!")
-            remover_cliente_window.destroy()
+            changes = self.operacoes_crud.remover_estoque(codigo)
+            if changes == 0:
+                messagebox.showinfo("Erro", "Cliente não encontrado.")
+            else: 
+                messagebox.showinfo("Sucesso", "Cliente removido com sucesso!")
 
         button_remover = tk.Button(remover_cliente_window, text="Remover", command=remover_cliente)
         button_remover.pack()
