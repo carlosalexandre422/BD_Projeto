@@ -421,7 +421,7 @@ class Application:
 
         def remover_cliente():
             codigo = int(entry_codigo.get())
-            changes = self.operacoes_crud.remover_estoque(codigo)
+            changes = self.operacoes_crud.remover_cliente(codigo)
             if changes == 0:
                 messagebox.showinfo("Erro", "Cliente não encontrado.")
             else: 
