@@ -1,7 +1,7 @@
 import sqlite3
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk
+from tkinter import ttk, messagebox
+from datetime import date
 
 class OperacoesClientes:
     def __init__(self):
@@ -54,7 +54,8 @@ class OperacoesPedidos:
                             )''')
         self.conn.commit()
 
-    def criar_pedido(self, codigo_cliente, nome_vendedor, data):
+    def criar_pedido(self, codigo_cliente, nome_vendedor):
+        data_atual = date.today().strftime("%Y-%m-%d")
         self.c.execute('''INSERT INTO pedidos (codigo_cliente, nome_vendedor, data) VALUES (?, ?, ?)''', (codigo_cliente, nome_vendedor, data))
         codigo_pedido = self.c.lastrowid
         self.conn.commit()
@@ -99,7 +100,7 @@ class Cliente:
 class Pedido:
     def __init__(self, codigo_cliente, data):
         self.codigo_cliente = codigo_cliente
-        self.data = data
+        self.nome_vendedor = nome_vendedor;
 
 class ItemPedido:
     def __init__(self, codigo_pedido, codigo_produto, quantidade):
@@ -246,17 +247,11 @@ class ApplicationPedidos:
         label_nome_vendedor.pack()
         entry_nome_vendedor = tk.Entry(criar_pedido_window)
         entry_nome_vendedor.pack()
-
-        label_data = tk.Label(criar_pedido_window, text="Data:")
-        label_data.pack()
-        entry_data = tk.Entry(criar_pedido_window)
-        entry_data.pack()
         
         def criar_pedido(self):
             codigo_cliente = int(self.entry_codigo_cliente.get())
             nome_vendedor = self.entry_nome_vendedor.get()
-            data = self.entry_data.get()
-            self.operacoes_pedidos.criar_pedido(codigo_cliente, nome_vendedor, data)
+            self.operacoes_pedidos.criar_pedido(codigo_cliente, nome_vendedor)
             messagebox.showinfo("Sucesso", "Pedido criado com sucesso!")
 
         button_criar_pedido = tk.Button(criar_pedido_window, text="Adicionar Itens")
