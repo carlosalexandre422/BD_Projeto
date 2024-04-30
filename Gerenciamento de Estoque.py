@@ -14,6 +14,10 @@ class OperacoesEstoque:
                             )''')
         self.conn.commit()
 
+        self.c.execute('''CREATE VIEW IF NOT EXISTS itens_disponiveis AS
+                            SELECT * FROM estoque WHERE quantidade > 0''')
+        self.conn.commit()
+
     def inserir_produto(self, produto):
         self.c.execute('''INSERT INTO estoque (nome, quantidade, preco) 
                           VALUES (?, ?, ?)''', (produto.nome, produto.quantidade, produto.preco))
