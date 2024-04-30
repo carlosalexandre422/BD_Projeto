@@ -32,6 +32,12 @@ class OperacoesEstoque:
             resultados.append((col[0], col[1], col[2], col[3]))
         return resultados
 
+    def remover_produto(self, codigo):
+        self.c.execute('''DELETE FROM estoque WHERE codigo=?''', (codigo,))
+        rows_deleted = self.c.execute("SELECT changes()").fetchone()[0]
+        self.conn.commit()
+        return rows_deleted
+
     def mostrar_todos_itens_estoque(self):
         self.c.execute("SELECT * FROM estoque")
         estoque = self.c.fetchall()
@@ -58,6 +64,9 @@ class ApplicationEstoque:
         self.alterar_produto_button.pack(pady=5)
 
         self.pesquisar_produto_button = tk.Button(master, text="Pesquisar Produto", command=self.janela_pesquisar_produto)
+        self.pesquisar_produto_button.pack(pady=5)
+
+        self.pesquisar_produto_button = tk.Button(master, text="Remover Produto", command=self.janela_remover_produto)
         self.pesquisar_produto_button.pack(pady=5)
 
         self.mostrar_estoque_button = tk.Button(master, text="Mostrar Estoque", command=self.mostrar_estoque)
@@ -158,6 +167,27 @@ class ApplicationEstoque:
             messagebox.showinfo("Resultados", resultado_str)
         else:
             messagebox.showinfo("Resultados", "Nenhum produto encontrado com esse nome.")
+
+    def janela_remover_produto(self):
+        remover_produto_window = tk.Toplevel(self.master)
+        remover_produto_window.title("Remover produto")
+
+        label_codigo = tk.Label(remover_produto_window, text="Código do produto:")
+        label_codigo.pack()
+        entry_codigo = tk.Entry(remover_produto_window)
+        entry_codigo.pack()
+
+        def remover_produto():
+            codigo = int(entry_codigo.get())
+            changes = self.operacoes_estoque.remover_produto(codigo)
+            if changes == 0:
+                messagebox.showinfo("Erro", "Produto não encontrado.")
+            else: 
+                messagebox.showinfo("Sucesso", "Produto removido com sucesso!")
+            remover_produto_window.destroy()
+
+        button_remover = tk.Button(remover_produto_window, text="Remover", command=remover_produto)
+        button_remover.pack()
 
     def mostrar_estoque(self):
         estoque = self.operacoes_estoque.mostrar_todos_itens_estoque()
