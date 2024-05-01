@@ -1,85 +1,119 @@
 import sqlite3
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
-class ApplicationselectProdutos:
+class ApplicationSelecaoProdutos:
     def __init__(self, master):
         self.master = master
-        self.master.title("Seleção de Produtos")
+        self.itens_carrinho = {}
         
-        self.frame_disponiveis = tk.Frame(master)
-        self.frame_disponiveis.pack(padx=10, pady=10)
+        self.frame_selecao = tk.Frame(master)
+        self.frame_selecao.pack(padx=10, pady=10)
         
-        self.label_disponiveis = tk.Label(self.frame_disponiveis, text="Itens Disponíveis:")
-        self.label_disponiveis.pack()
+        self.label_produto = tk.Label(self.frame_selecao, text="Selecione o produto:")
+        self.label_produto.pack()
         
-        self.lista_disponiveis = tk.Listbox(self.frame_disponiveis, width=50)
-        self.lista_disponiveis.pack()
+        self.combobox_produtos = ttk.Combobox(self.frame_selecao, width=30)
+        self.combobox_produtos.pack()
+        
+        self.label_quantidade = tk.Label(self.frame_selecao, text="Selecione a quantidade:")
+        self.label_quantidade.pack()
+        
+        self.entry_quantidade = tk.Entry(self.frame_selecao)
+        self.entry_quantidade.pack(side=tk.LEFT)
+        
+        self.button_incrementar = tk.Button(self.frame_selecao, text="+", width=2, command=self.incrementar_quantidade)
+        self.button_incrementar.pack(side=tk.LEFT)
+        
+        self.button_decrementar = tk.Button(self.frame_selecao, text="-", width=2, command=self.decrementar_quantidade)
+        self.button_decrementar.pack(side=tk.LEFT)
+        
+        self.button_adicionar = tk.Button(self.frame_selecao, text="Adicionar ao Carrinho", command=self.adicionar_ao_carrinho)
+        self.button_adicionar.pack()
+        
+        self.button_mostrar_carrinho = tk.Button(self.master, text="Mostrar Carrinho", command=self.mostrar_carrinho)
+        self.button_mostrar_carrinho.pack()
+        
+        self.treeview_produtos = ttk.Treeview(self.master, columns=("Nome", "Preço"))
+        self.treeview_produtos.heading("#0", text="ID")
+        self.treeview_produtos.heading("#1", text="Nome")
+        self.treeview_produtos.heading("#2", text="Preço")
+        self.treeview_produtos.pack(padx=10, pady=10)
         
         self.conn = sqlite3.connect('mercado.db')
         self.c = self.conn.cursor()
         self.c.execute("SELECT * FROM itens_disponiveis")
         disponiveis = self.c.fetchall()
-        for item in disponiveis:
-            self.lista_disponiveis.insert(tk.END, f"{item[1]}: {item[2]} disponíveis - Preço: R${item[3]}")
+                
+        self.combobox_produtos['values'] = [f"{item[1]}" for item in disponiveis]  
         
-        self.frame_select = tk.Frame(master)
-        self.frame_select.pack(padx=10, pady=10)
-        
-        self.label_produto = tk.Label(self.frame_select, text="Selecione o produto:")
-        self.label_produto.pack()
-        
-        self.combobox_produtos = ttk.Combobox(self.frame_select)
-        self.combobox_produtos['values'] = [item[1] for item in disponiveis]  # Preenche a ComboBox com os nomes dos produtos disponíveis
-        self.combobox_produtos.pack()
-        
-        self.label_quantidade = tk.Label(self.frame_select, text="Selecione a quantidade:")
-        self.label_quantidade.pack()
-        
-        self.entry_quantidade = tk.Entry(self.frame_select)
-        self.entry_quantidade.pack()
-        
-        self.button_adicionar = tk.Button(self.frame_select, text="Adicionar ao Carrinho", command=self.adicionar_ao_carrinho)
-        self.button_adicionar.pack()
-        
-        self.button_mostrar_carrinho = tk.Button(self.master, text="Mostrar Carrinho", command=self.mostrar_carrinho)
-        self.button_mostrar_carrinho.pack(pady=10)
-        
-        self.itens_carrinho = []
+        for produto in disponiveis:
+            self.treeview_produtos.insert("", tk.END, text=produto[0], values=(produto[1], f"R${produto[3]:.2f}"))
+
+    def incrementar_quantidade(self):
+        quantidade_atual = int(self.entry_quantidade.get())
+        self.entry_quantidade.delete(0, tk.END)
+        self.entry_quantidade.insert(0, str(quantidade_atual + 1))
+    
+    def decrementar_quantidade(self):
+        quantidade_atual = int(self.entry_quantidade.get())
+        if quantidade_atual > 1:
+            self.entry_quantidade.delete(0, tk.END)
+            self.entry_quantidade.insert(0, str(quantidade_atual - 1))
+
     
     def adicionar_ao_carrinho(self):
-        produto_selecionado = self.combobox_produtos.get()
+        produto_selecionado = self.combobox_produtos.get().split(" - ")[0]
         quantidade = int(self.entry_quantidade.get())
         
-        for i, (produto, j) in enumerate(self.itens_carrinho): #j é a quantidade ja no carrinho
-            if produto == produto_selecionado:
-                self.itens_carrinho[i] = (produto, j + quantidade)
-                break
+        self.c.execute("SELECT preco FROM itens_disponiveis WHERE nome=?", (produto_selecionado,))
+        preco_unitario = self.c.fetchone()[0]
+        
+        if produto_selecionado in self.itens_carrinho:
+            
+            self.itens_carrinho[produto_selecionado]["quantidade"] += quantidade
         else:
-            self.itens_carrinho.append((produto_selecionado, quantidade))
+            self.itens_carrinho[produto_selecionado] = {"quantidade": quantidade, "preco_unitario": preco_unitario}
         
         print(f"Produto: {produto_selecionado}, Quantidade: {quantidade} - Adicionado ao carrinho")
-
+    
     def mostrar_carrinho(self):
         if self.itens_carrinho:
             self.carrinho_window = tk.Toplevel(self.master)
             self.carrinho_window.title("Carrinho de Compras")
-
-            tree = ttk.Treeview(self.carrinho_window, columns=("Produto", "Quantidade", "Preço"))
-
-            tree.heading("#0", text="Produto")
-            tree.heading("#1", text="Quantidade")
-            tree.heading("#2", text="Preço")
-
-            for i, (produto, quantidade) in enumerate(self.itens_carrinho):
-                preco_produto = 10
-                tree.insert("", i, text=produto, values=(quantidade, preco_produto))
-
-            tree.pack(expand=True, fill="both")
+            carrinho = CarrinhoCompra(self.carrinho_window, self.itens_carrinho)
         else:
-            print("O carrinho está vazio.")
-#######################################################AJEITAR O PREÇO
+            messagebox.showinfo("ERRO", "O carrinho está vazio.")
+
+class CarrinhoCompra:
+    def __init__(self, master, itens_carrinho):
+        self.master = master
+        self.itens_carrinho = itens_carrinho
+        
+        self.frame_carrinho = tk.Frame(master)
+        self.frame_carrinho.pack(padx=10, pady=10)
+        
+        self.label_carrinho = tk.Label(self.frame_carrinho, text="Itens no Carrinho:")
+        self.label_carrinho.pack()
+        
+        self.treeview_carrinho = ttk.Treeview(self.frame_carrinho, columns=("Quantidade", "Preço Unitário", "Valor Parcial"))
+        self.treeview_carrinho.heading("#0", text="Produto")
+        self.treeview_carrinho.heading("#1", text="Quantidade")
+        self.treeview_carrinho.heading("#2", text="Preço Unitário")
+        self.treeview_carrinho.heading("#3", text="Valor Parcial")
+        self.treeview_carrinho.pack()
+        
+        for produto, info in self.itens_carrinho.items():
+            preco_unitario = info["preco_unitario"]
+            quantidade = info["quantidade"]
+            parcial = info["preco_unitario"] * info["quantidade"]
+            self.treeview_carrinho.insert("", tk.END, text=produto, values=(quantidade, f"R${preco_unitario:.2f}", f"R${parcial:.2f}"))
+        
+        self.button_identificar_cliente = tk.Button(master, text="Identificar Cliente", command=self.identificar_cliente)
+        self.button_identificar_cliente.pack(pady=10)
+    
+    #def identificar_cliente(self):#fazer clienteeeee
 
 root = tk.Tk()
-app = ApplicationselectProdutos(root)
+app = ApplicationSelecaoProdutos(root)
 root.mainloop()

@@ -139,7 +139,7 @@ class ApplicationEstoque:
             novo_produto = Produto(nome, quantidade, preco)
             rows_affected = self.operacoes_estoque.alterar_produto(codigo, novo_produto)
             if rows_affected == 0:
-                messagebox.showinfo("Erro", "Produto não encontrado.")
+                messagebox.showinfo("ERRO", "Produto não encontrado.")
                 return
             messagebox.showinfo("Sucesso", "Produto alterado com sucesso!")
             alterar_produto_window.destroy()
@@ -170,7 +170,7 @@ class ApplicationEstoque:
                 resultado_str += f"Código: {codigo}\nNome: {nome}\nQuantidade: {quantidade}\nPreço: {preco}\n"
             messagebox.showinfo("Resultados", resultado_str)
         else:
-            messagebox.showinfo("Resultados", "Nenhum produto encontrado com esse nome.")
+            messagebox.showinfo("ERRO", "Nenhum produto encontrado com esse nome.")
 
     def janela_remover_produto(self):
         remover_produto_window = tk.Toplevel(self.master)
@@ -201,7 +201,7 @@ class ApplicationEstoque:
                 resultado_str += " | ".join(str(item) for item in produto) + "\n"
             messagebox.showinfo("Estoque", resultado_str)
         else:
-            messagebox.showinfo("Estoque", "O estoque está vazio.")
+            messagebox.showinfo("ERRO", "O estoque está vazio.")
 
 root = tk.Tk()
 app_estoque = ApplicationEstoque(root)
