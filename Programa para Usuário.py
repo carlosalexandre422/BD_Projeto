@@ -111,8 +111,27 @@ class CarrinhoCompra:
         
         self.button_identificar_cliente = tk.Button(master, text="Identificar Cliente", command=self.identificar_cliente)
         self.button_identificar_cliente.pack(pady=10)
+
+        self.button_identificar_cliente = tk.Button(master, text="Finalizar Pedido", command=self.finalizar_compra)
+        self.button_identificar_cliente.pack(pady=10)
     
-    #def identificar_cliente(self):#fazer clienteeeee
+    def identificar_cliente(self):
+        messagebox.showinfo("ERRO", "TA PRONTO NÃO.")
+    
+    def finalizar_compra(self):
+        conn = sqlite3.connect('mercado.db')
+        c = conn.cursor()
+
+        codigo_pedido = c.lastrowid
+        c.execute("INSERT INTO pedidos (codigo, codigo_cliente, data) VALUES (?, ?, CURRENT_DATE)", (codigo_pedido, 123,))  # Substitua 123 pelo código do cliente
+            
+        for produto, info in self.itens_carrinho.items():
+            quantidade = info["quantidade"]
+            parcial = info["preco_unitario"] * info["quantidade"]
+            c.execute("INSERT INTO itens_pedido (codigo_pedido, codigo_pedido, produto, parcial) VALUES (?, ?, ?, ?)",
+          (codigo_pedido, codigo_pedido, produto, parcial))
+            
+        conn.commit()
 
 root = tk.Tk()
 app = ApplicationSelecaoProdutos(root)

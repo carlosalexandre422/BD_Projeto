@@ -49,7 +49,7 @@ class OperacoesPedidos:
         self.c.execute('''CREATE TABLE IF NOT EXISTS pedidos (
                             codigo INTEGER PRIMARY KEY,
                             codigo_cliente INTEGER,
-                            nome_vendedor TEXT,
+                            #nome_vendedor TEXT,
                             data DATE
                             )''')
         self.conn.commit()
@@ -83,11 +83,10 @@ class OperacoesItensPedido:
         self.conn = sqlite3.connect('mercado.db')
         self.c = self.conn.cursor()
         self.c.execute('''CREATE TABLE IF NOT EXISTS itens_pedido (
-                            codigo INTEGER PRIMARY KEY,
+                            codigo INTEGER PRIMARY KEY
                             codigo_pedido INTEGER,
-                            codigo_produto INTEGER,
-                            quantidade INTEGER,
-                            FOREIGN KEY (codigo_pedido) REFERENCES pedidos(codigo)
+                            produto TEXT,
+                            parcial REAL,
                             )''')
         self.conn.commit()
 
@@ -103,9 +102,9 @@ class Pedido:
         self.nome_vendedor = nome_vendedor;
 
 class ItemPedido:
-    def __init__(self, codigo_pedido, codigo_produto, quantidade):
+    def __init__(self, codigo_pedido, produto, quantidade):
         self.codigo_pedido = codigo_pedido
-        self.codigo_produto = codigo_produto
+        self.produto = produto
         self.quantidade = quantidade
 
 class ApplicationClientes:
